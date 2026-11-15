@@ -39,7 +39,7 @@ function diagnose(problem) {
   };
 }
 
-export default function GenerativeACService({ onClassic, compact = false, hideHeader = false, classicLabel = 'Classic services' }) {
+export default function GenerativeACService({ onClassic, onSuggest, compact = false, hideHeader = false, classicLabel = 'Classic services' }) {
   const [state, dispatch] = useReducer(reducer, initialState);
   const roomRef = useRef(null);
   const remoteAudioRef = useRef(null);
@@ -118,7 +118,7 @@ export default function GenerativeACService({ onClassic, compact = false, hideHe
           <p aria-live="polite">{status === 'connected' ? 'Connected. You can speak with the assistant now.' : 'Use your microphone for a voice conversation.'}</p>
           {state.voice.phase === 'error' && <p className="smart-ac-voice-error" role="alert">{state.voice.message || 'The voice assistant could not connect. Please try again.'}</p>}
         </div>
-        <button className="smart-ac-primary" type="button" disabled={state.problem.trim().length < 3} onClick={() => dispatch({ type: 'ANALYZE' })}>Get a suggestion <span>→</span></button>
+        <button className="smart-ac-primary" type="button" disabled={state.problem.trim().length < 3} onClick={() => (onSuggest ? onSuggest({ source: 'text', text: state.problem, brand: state.brand }) : dispatch({ type: 'ANALYZE' }))}>Get a suggestion <span>→</span></button>
       </div>}
       {state.phase === 'loading' && <div className="smart-ac-loading" role="status"><span className="smart-ac-spinner" /><h1>Looking at what you described</h1><p>We’re preparing a service suggestion.</p></div>}
       {state.phase === 'adaptive' && state.result && <div className="smart-ac-result">

@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { categories, issueOptions, services, approvalCopy } from './data/services.js';
-import { addService, adjustQuantity, readCart, removeService, saveCart, updateServiceAcType } from './lib/cart.js';
+import { categories, issueOptions, services, listedServices, approvalCopy } from './data/services.js';
+import { addService, addServices, adjustQuantity, readCart, removeService, saveCart, updateServiceAcType } from './lib/cart.js';
 import ServiceChooserSection from './components/ServiceChooser/ServiceChooserSection.jsx';
 import ServiceChooserPage from './components/ServiceChooser/ServiceChooserPage.jsx';
 
@@ -186,6 +186,10 @@ export default function App() {
     setCart((current) => addService(current, selectedService.id, issue, acType));
     push('addons');
   };
+  const addSuggested = (lines, { issue = '', acType: suggestedType = '' } = {}) => {
+    setCart((current) => addServices(current, lines, issue, suggestedType));
+    push('cart');
+  };
   const shareAcPage = async () => {
     try {
       if (navigator.share) await navigator.share({ title: 'Urban Company AC services', url: window.location.href });
@@ -265,6 +269,7 @@ export default function App() {
         {page === 'service-chooser' && (
           <ServiceChooserPage
             onBack={back}
+            onAddToCart={addSuggested}
             onSelectService={(service) => {
               if (typeof service === 'string') {
                 openDetails(service);
@@ -356,12 +361,12 @@ export default function App() {
                 <button type="button" className={`filter-chip ${serviceFilter === 'selected' ? 'is-selected' : ''}`} onClick={() => setServiceFilter((value) => value === 'selected' ? 'all' : 'selected')}>Selected ({cart.items.length})</button>
               </div>
               <div className="service-list">
-                {services
+                {listedServices
                   .filter((item) => category === 'All services' || item.category === category)
                   .filter((item) => serviceFilter !== 'selected' || cart.items.some((cartItem) => cartItem.serviceId === item.id))
                   .filter((item) => item.name.toLowerCase().includes(search.trim().toLowerCase()))
                   .map((item) => <ServiceCard key={item.id} service={item} isSelected={cart.items.some((cartItem) => cartItem.serviceId === item.id)} onDetails={() => openDetails(item.id)} onAdd={() => addFromList(item.id)} selectedCount={cart.items.find((cartItem) => cartItem.serviceId === item.id)?.quantity || 0} />)}
-                {services.filter((item) => (category === 'All services' || item.category === category) && (serviceFilter !== 'selected' || cart.items.some((cartItem) => cartItem.serviceId === item.id)) && item.name.toLowerCase().includes(search.trim().toLowerCase())).length === 0 && (
+                {listedServices.filter((item) => (category === 'All services' || item.category === category) && (serviceFilter !== 'selected' || cart.items.some((cartItem) => cartItem.serviceId === item.id)) && item.name.toLowerCase().includes(search.trim().toLowerCase())).length === 0 && (
                   <EmptyState title="No matching services" copy="Try a different service name or clear your filters." button="Clear filters" onClick={() => { setSearch(''); setCategory('All services'); setServiceFilter('all'); }} />
                 )}
               </div>

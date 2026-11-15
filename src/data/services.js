@@ -11,9 +11,27 @@ const services = [
   { id: 'ac.uninstallation-split', name: 'Split AC uninstallation', category: 'Installation/uninstallation', rating: '4.79 (135K reviews)', price: '₹649', amount: 649, duration: '1 hr', image: '/assets/category-install.png', details: ['Safe removal of indoor and outdoor units', 'Gas refill, if required, is charged separately', shared.warranty], included: ['Area inspection and quotation', 'Careful unit removal', 'Final clean-up'], process: ['Inspection', 'Quotation and approval', 'Uninstallation', 'Final clean-up'] },
   { id: 'ac.uninstallation-window', name: 'Window AC uninstallation', category: 'Installation/uninstallation', rating: '4.82 (8K reviews)', price: '₹699', amount: 699, duration: '1 hr', image: '/assets/category-install.png', details: ['Safe removal of window AC', 'Gas refill, if required, is charged separately', shared.warranty], included: ['Area inspection and quotation', 'Careful unit removal', 'Final clean-up'], process: ['Inspection', 'Quotation and approval', 'Uninstallation', 'Final clean-up'] },
 ];
+/*
+ * Repair variants used by the "Suggest a service" screen. Each one is a real, priced
+ * line in the cart. They share the repair photo and rules, and are kept out of the
+ * normal service lists (category 'Suggested').
+ */
+const repair = services.find((service) => service.id === 'ac.repair');
+const repairVariant = (id, name, amount, note, rating) => ({
+  ...repair, id, name, category: 'Suggested', rating, price: `Starts at ₹${amount}`, amount,
+  details: [note, ...repair.details.slice(1)],
+});
+services.push(
+  repairVariant('ac.repair-cooling', 'Less/no cooling repair', 299, 'A verified professional finds why the room is not cooling before any repair', '4.75 (505K reviews)'),
+  repairVariant('ac.repair-power', 'Power issue repair', 299, 'A verified professional finds why the AC does not switch on before any repair', '4.73 (145K reviews)'),
+  repairVariant('ac.repair-noise', 'Unwanted noise/smell', 499, 'A verified professional finds where the noise or smell comes from before any repair', '4.77 (43K reviews)'),
+  repairVariant('ac.repair-leak', 'Water leakage', 599, 'A verified professional finds where the water comes from before any repair', '4.70 (190K reviews)'),
+);
 const fixCurrency = (value) => typeof value === 'string' ? value.replace(/\u00e2\u201a\u00b9/g, '\u20b9') : value;
 services.forEach((service) => Object.keys(service).forEach((key) => { service[key] = fixCurrency(service[key]); }));
 export { services };
+/* What the browse lists show: everything except the variants made for suggestions. */
+export const listedServices = services.filter((service) => service.category !== 'Suggested');
 export const issueOptions = [{ label: 'Less/no cooling', price: '₹299', rating: '4.75 (505K reviews)' }, { label: 'Power issue', price: '₹299', rating: '4.73 (145K reviews)' }, { label: 'Unwanted noise/smell', price: '₹499', rating: '4.77 (43K reviews)' }, { label: 'Water leakage', price: '₹599', rating: '4.70 (190K reviews)' }];
 issueOptions.forEach((option) => { option.price = fixCurrency(option.price); });
 export const approvalCopy = { project: 'Prices, ratings, inclusions and service policies are based on the AC services brief.' };

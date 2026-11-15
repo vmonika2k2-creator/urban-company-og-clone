@@ -21,7 +21,7 @@ const VOICE_LANGUAGES = [
   { code: 'kn', label: 'Kannada', short: 'KN' },
 ];
 
-function SmartAcCanvas({ onBack, embedded, voiceOnly, onSelectService }) {
+function SmartAcCanvas({ onBack, embedded, voiceOnly, onSelectService, onSuggest }) {
   const { state, dispatch, applyAiPayload } = useSmartAc();
   const recommendation = state.svc ? getRecommendedService(state) : null;
   const language = LANGUAGES[state.lang]?.code || 'en';
@@ -228,7 +228,7 @@ function SmartAcCanvas({ onBack, embedded, voiceOnly, onSelectService }) {
           <h2>Co-Pilot Diagnosing AC…</h2>
           <p>Analyzing symptoms with Urban Company rate card &amp; verifying scope.</p>
         </section>}
-        <RecommendationCard recommendation={voiceRecommendation} onSelect={onSelectService} hideDetails={voiceOnly} />
+        <RecommendationCard recommendation={voiceRecommendation} onSelect={(recommendation) => (onSuggest ? onSuggest({ source: 'voice', recommendation, state: stateRef.current, transcript: sttText }) : onSelectService?.(recommendation))} hideDetails={voiceOnly} />
         {voiceOnly && interfaceRevealed && <div className="coolcare-card coolcare-language-card coolcare-revealed">
           <div className="coolcare-segmented" role="tablist" aria-label="Vaayu language">
             {VOICE_LANGUAGES.map((item) => <span key={item.code} role="tab" aria-selected={activeLanguage === item.code} className={activeLanguage === item.code ? 'is-active' : ''} title={item.label}>{item.short}</span>)}
@@ -239,7 +239,7 @@ function SmartAcCanvas({ onBack, embedded, voiceOnly, onSelectService }) {
           <span>{environmentLabel} · {state.brand} · {state.temp}°C · {statusLabel}{state.issue !== 'none' ? ` · ${state.issue}` : ''}</span>
         </div>
         {!voiceOnly && <div className="coolcare-diagnose-action">
-          <button className="smart-ac-primary" type="button" onClick={() => dispatch({ type: 'SET_SERVICE_VISIBLE', value: true })}>{translate('diagnose', state.lang)} <span>→</span></button>
+          <button className="smart-ac-primary" type="button" onClick={() => (onSuggest ? onSuggest({ source: 'controls', state: stateRef.current }) : dispatch({ type: 'SET_SERVICE_VISIBLE', value: true }))}>{translate('diagnose', state.lang)} <span>→</span></button>
         </div>}
         {!voiceOnly && state.svc && <ServiceCard service={recommendation} />}
         {!voiceOnly && <ControlPanel />}
@@ -253,6 +253,6 @@ function SmartAcCanvas({ onBack, embedded, voiceOnly, onSelectService }) {
   </section>;
 }
 
-export default function SmartAcFix({ onBack, embedded = false, voiceOnly = false, onSelectService }) {
-  return <SmartAcProvider><SmartAcCanvas onBack={onBack} embedded={embedded} voiceOnly={voiceOnly} onSelectService={onSelectService} /></SmartAcProvider>;
+export default function SmartAcFix({ onBack, embedded = false, voiceOnly = false, onSelectService, onSuggest }) {
+  return <SmartAcProvider><SmartAcCanvas onBack={onBack} embedded={embedded} voiceOnly={voiceOnly} onSelectService={onSelectService} onSuggest={onSuggest} /></SmartAcProvider>;
 }
