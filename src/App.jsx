@@ -1,6 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { categories, services, approvalCopy } from './data/services.js';
+import { categories, issueOptions, services, approvalCopy } from './data/services.js';
 import { addService, adjustQuantity, readCart, removeService, saveCart, updateServiceAcType } from './lib/cart.js';
+import ServiceChooserSection from './components/ServiceChooser/ServiceChooserSection.jsx';
+import ServiceChooserPage from './components/ServiceChooser/ServiceChooserPage.jsx';
 
 const glyph = (name) => `/assets/${name}.svg`;
 
@@ -260,6 +262,35 @@ export default function App() {
           </>
         )}
 
+        {page === 'service-chooser' && (
+          <ServiceChooserPage
+            onBack={back}
+            onSelectService={(service) => {
+              if (typeof service === 'string') {
+                openDetails(service);
+              } else if (service && typeof service === 'object' && service.title) {
+                // Map common recommendation titles to catalogue services
+                const title = service.title.toLowerCase();
+                if (title.includes('foam')) {
+                  openDetails('ac.service');
+                } else if (title.includes('leak') || title.includes('noise') || title.includes('power') || title.includes('cooling')) {
+                  openDetails('ac.repair');
+                } else if (title.includes('gas')) {
+                  openDetails('ac.gas-refill');
+                } else if (title.includes('install')) {
+                  openDetails('ac.installation');
+                } else {
+                  setCategory('All services');
+                  push('services');
+                }
+              } else {
+                setCategory('All services');
+                push('services');
+              }
+            }}
+          />
+        )}
+
         {page === 'ac-overview' && (
           <>
             <header className="ac-topbar">
@@ -270,11 +301,12 @@ export default function App() {
             </header>
             {shareStatus && <p className="share-status" aria-live="polite">{shareStatus}</p>}
             <div className="content-scroll ac-overview-content">
+              <ServiceChooserSection onOpen={() => push('service-chooser')} />
               <section className="diagnosis-feature">
                 <div><span className="free-check-label">FREE GAS CHECK</span><h1>AC diagnosis<br />with Co-pilot</h1><p>No gas refill without a reading</p></div>
                 <img src="/assets/ac-diagnosis-device.png" alt="Urban Company AC diagnostic device" />
               </section>
-              <section className="ac-rating-row"><div><h2>AC</h2><p>★ 4.78 (14.3M bookings)</p></div><div className="earliest-slot"><span>◷ Earliest</span><strong>Tue, 8:00 AM</strong></div></section>
+              <section className="ac-rating-row"><div><h2>AC services</h2><p>★ 4.78 (14.3M bookings)</p></div><div className="earliest-slot"><span>◷ Earliest</span><strong>In 44 mins</strong></div></section>
               <button className="cover-promo" type="button" onClick={() => push('cover-preview')}><span><strong>● UC COVER</strong><span>Up to 30 days warranty on repairs</span></span><span className="cover-arrow">›</span></button>
               <div className="ac-shortcuts">
                 {[
@@ -301,7 +333,7 @@ export default function App() {
             <Header title="UC Cover" onBack={back} onCart={openCart} count={cartCount} />
             <div className="content-scroll cover-content">
               <h1 className="heading-1">UC Cover</h1><p className="body-copy">End-to-end service protection</p>
-              <section className="cover-info-card"><span className="cover-mark">✓</span><h2>90-day warranty on repairs</h2><ul><li>Free repairs if the same issue arises</li><li>One-click hassle-free claims</li><li>Up to ₹10,000 cover if anything is damaged during the repair</li></ul></section>
+              <section className="cover-info-card"><span className="cover-mark">✓</span><h2>Up to 30-day warranty on repairs</h2><ul><li>Free repairs if the same issue arises</li><li>Repairs are covered when spare parts are purchased through Urban Company</li><li>Ask for a quote before any repair or replacement begins</li></ul></section>
               <section className="cover-info-card cover-expert"><h2>Expert verified repair quotes</h2><p>We will verify the repair quote shared by the professional.</p><p>If you’re still unsure, you can ask an expert for a second opinion.</p></section>
               <section className="cover-info-card"><h2>Fixed rate card</h2><p>Review the service details before adding a service to your cart.</p></section>
             </div>
@@ -315,7 +347,7 @@ export default function App() {
             <SearchField value={search} onChange={setSearch} inputRef={searchRef} onSubmit={() => {}} />
             <div className="content-scroll services-content">
               <h1 className="heading-1">AC services &amp; repair</h1>
-              <p className="body-copy">Choose a service to review its details.</p>
+              <p className="body-copy">Book verified professionals for cleaning, diagnostics, gas refill, installation and uninstallation.</p>
               <div className="filter-row" aria-label="Service categories">
                 {categories.map((item) => <button key={item} type="button" className={`filter-chip ${category === item ? 'is-selected' : ''}`} onClick={() => setCategory(item)}>{item}</button>)}
               </div>
@@ -359,9 +391,9 @@ export default function App() {
               <section className="fact-section">
                 <h2 className="heading-2">Service information</h2>
                 <div className="accordion-list">
-                  <Accordion title="What is included?">Scope pending approval. No inclusion or exclusion is implied.</Accordion>
-                  <Accordion title="Warranty">Warranty pending approval. No verified warranty or guarantee is implied.</Accordion>
-                  <Accordion title="Safety & policies">Safety and policy wording is pending approval.</Accordion>
+                  <Accordion title="What is included?">{selectedService.included?.join(' / ') || 'A verified professional will review the service scope before starting.'}</Accordion>
+                  <Accordion title="How does the service work?">{selectedService.process?.join(' → ') || 'Inspection, quotation, service and final clean-up.'}</Accordion>
+                  <Accordion title="Warranty & guidelines">UC Cover provides up to 30 days warranty on repairs when spare parts are purchased through Urban Company. Arrange a ladder for high-mounted ACs.</Accordion>
                 </div>
               </section>
               {selectedService.category.includes('Installation') && <Notice tone="warning">Installation extras and policy wording require approved project data before booking.</Notice>}
@@ -381,8 +413,9 @@ export default function App() {
               <p className="body-copy">Tell us what you noticed. The preview saves your note with the selection.</p>
               <label className="field-label" htmlFor="issue-note">Describe the issue</label>
               <textarea id="issue-note" className="issue-input" value={issueDraft} onChange={(event) => setIssueDraft(event.target.value)} placeholder="Enter your issue" rows="4" />
-              <p className="field-hint">Issue categories, diagnosis, repair method and safety instructions are pending approval.</p>
-              <Notice tone="warning">No repair or cleaning instructions have been approved.</Notice>
+              <p className="field-hint">Choose a common symptom or add more detail. A professional will diagnose the root cause before repair.</p>
+              <div className="issue-options">{issueOptions.map((option) => <button type="button" className="issue-option" key={option.label} onClick={() => setIssueDraft(option.label)}><span><strong>{option.label}</strong><small>{option.rating}</small></span><b>{option.price}</b></button>)}</div>
+              <Notice tone="info">Any repair or part replacement starts only after you approve the quote.</Notice>
             </div>
             <StickyFooter note={issueDraft.trim() ? 'Issue note saved locally with this selection.' : 'Describe the issue to continue.'} action="Add to selection" disabled={!issueDraft.trim()} onClick={() => addActiveService(issueDraft.trim())} />
           </>
@@ -394,15 +427,15 @@ export default function App() {
             <div className="content-scroll process-content">
               <p className="breadcrumbs">AC services / Repair</p>
               <h1 className="heading-1">How a repair works</h1>
-              <p className="body-copy">Process structure only. These are not approved repair instructions.</p>
+              <p className="body-copy">A verified professional checks the AC, shares a clear quote and proceeds only after your approval.</p>
               <div className="steps-list">
                 {[
                   ['1', 'Identify the service', 'AC repair · service selection'],
-                  ['2', 'Review service facts', 'Price pending · Duration pending · Scope pending approval'],
-                  ['3', 'Review approval blockers', 'Warranty, safety and policies pending approval. Booking unavailable until required data is approved.'],
+                  ['2', 'Review service facts', 'Starts at ₹299 · 45 mins · Free gas check included'],
+                  ['3', 'Approve the quote', 'Repair or part replacement begins only after you approve the transparent quote.'],
                 ].map(([number, title, copy]) => <article className="step-row" key={number}><span className="step-number">{number}</span><div><h2>{title}</h2><p>{copy}</p></div></article>)}
               </div>
-              <Notice tone="warning">Never reorder steps or generate technical instructions.</Notice>
+              <Notice tone="info">Gas refilling and part replacement are additional work and require your approval.</Notice>
               <p className="preview-caption">{approvalCopy.project}</p>
             </div>
           </>
@@ -417,18 +450,18 @@ export default function App() {
               <div className="selected-service-panel">
                 <p className="small-muted">Your selected service</p>
                 <h2>{selectedService.name}</h2>
-                <p className="body-copy">Duration pending · Scope pending approval</p>
-                <div className="selected-service-bottom"><strong>Price pending</strong><QuantityControl quantity={selectedCartItem?.quantity || 1} onDecrease={() => decrement(selectedService.id)} onIncrease={() => increment(selectedService.id)} /></div>
+                <p className="body-copy">{selectedService.duration || 'Service time varies'} · {selectedService.details?.[0] || 'Verified professional service'}</p>
+                <div className="selected-service-bottom"><strong>{selectedService.price}</strong><QuantityControl quantity={selectedCartItem?.quantity || 1} onDecrease={() => decrement(selectedService.id)} onIncrease={() => increment(selectedService.id)} /></div>
               </div>
               <h2 className="heading-2 section-gap">Add-ons for your service</h2>
               <p className="body-copy muted-line">Not selected · Unavailable</p>
               <article className="addon-card">
-                <h3>AC add-on</h3>
-                <strong>Name awaiting approval</strong>
-                <p className="body-copy">Price pending · Duration pending</p>
-                <p className="body-copy">Scope pending approval. Compatibility with the selected service is not confirmed.</p>
-                <PrimaryButton variant="disabled" disabled>Add unavailable</PrimaryButton>
-                <p className="field-hint">Disabled until scope and price are approved.</p>
+                <h3>Gas refill, if required</h3>
+                <strong>₹3,000 · Approx. 2 hrs 30 mins</strong>
+                <p className="body-copy">Leak identification, fixing and refilling are quoted separately.</p>
+                <p className="body-copy">Gas refill is performed only after the professional shares the quote and you approve it.</p>
+                <PrimaryButton variant="disabled" disabled>Add after inspection</PrimaryButton>
+                <p className="field-hint">This is handled by the professional after the gas check.</p>
               </article>
               <hr className="divider" />
               <h2 className="heading-2">No paid extras selected</h2>
@@ -452,7 +485,7 @@ export default function App() {
                   return <article className="cart-item" key={item.serviceId}>
                     <p className="small-muted">Your selected service</p>
                     <div className="cart-item-heading"><h2>{service.name}</h2><button className="text-link" type="button" onClick={() => openDetails(service.id)}>Edit</button></div>
-                    <p className="body-copy">{service.duration || 'Duration pending'} · Scope pending approval</p>
+                    <p className="body-copy">{service.duration || 'Service time varies'} · {service.details?.[0] || 'Verified professional service'}</p>
                     {item.issue && <p className="issue-summary">Issue: {item.issue}</p>}
                     {item.acType && <p className="issue-summary">AC type: {item.acType}</p>}
                     <div className="selected-service-bottom"><strong>{service.price || 'Price pending'}</strong><QuantityControl quantity={item.quantity} onDecrease={() => decrement(item.serviceId)} onIncrease={() => increment(item.serviceId)} /></div>
@@ -485,7 +518,7 @@ export default function App() {
                 <hr className="divider" />
                 <section className="cart-section">
                   <h2 className="heading-2">Before you book</h2>
-                  <Notice tone="info">Warranty pending approval. Safety and policy wording is pending approval.</Notice>
+                  <Notice tone="info">UC Cover provides up to 30 days warranty on repairs when spare parts are purchased through Urban Company. Arrange a ladder for high-mounted ACs.</Notice>
                 </section>
                 <p className="preview-caption">{approvalCopy.project}</p>
               </> : <EmptyState title="Your cart is empty" copy="Add a service to review it here." button="Explore AC services" onClick={() => push('services')} />}

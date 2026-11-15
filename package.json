@@ -5,14 +5,34 @@
   "type": "module",
   "scripts": {
     "dev": "vite --host 0.0.0.0",
+    "voice-server": "node server.mjs",
+    "voice-agent": "python .agents/skills/genui-react-state-machine/agent.py dev",
     "build": "vite build",
+    "test": "node --test src/components/SmartAcFix/livekitRpc.test.js",
     "preview": "vite preview --host 0.0.0.0"
   },
   "dependencies": {
+    "dotenv": "^18.0.10",
+    "express": "^5.3.0",
+    "livekit-client": "^2.24.0",
+    "livekit-server-sdk": "^2.19.3",
     "react": "^19.2.0",
     "react-dom": "^19.2.0"
   },
   "devDependencies": {
     "vite": "^7.2.2"
-  }
+  },
+  "description": "A mobile-first React preview based only on the **Urban combanyscreen shots** and **Urban combanydesign system** sections in the supplied Figma file.",
+  "main": "vite.config.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vmonika2k2-creator/urban-company-og-clone.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/vmonika2k2-creator/urban-company-og-clone/issues"
+  },
+  "homepage": "https://github.com/vmonika2k2-creator/urban-company-og-clone#readme"
 }

@@ -1,0 +1,8 @@
+{
+  "servers": {
+    "copypasteui": {
+      "command": "npx",
+      "args": ["-y", "copypasteui.dev@latest", "mcp"]
+    }
+  }
+}
