@@ -22,6 +22,7 @@ export function startBrowserVoiceSession({
   setRecommendation,
   setLanguage,
   setInspecting,
+  setInterfaceRevealed,
   onSpeaking,
   onStatus,
   onSttText,
@@ -69,6 +70,7 @@ export function startBrowserVoiceSession({
       setTimeout(() => {
         if (!active) return;
         setInspecting?.(false);
+        setInterfaceRevealed?.(true);
         setRecommendation(item);
         const revealLine = isHindi
           ? 'Theek hai, mujhe lagta hai samasya mil gayi hai. Screen par diya button tap karein.'
@@ -95,6 +97,7 @@ export function startBrowserVoiceSession({
         ? 'Kripya AC ko turant wall switch aur main switch se band kar dein aur haath na lagayein. Power issue inspection ke liye button tap karein.'
         : 'Please switch off the AC at the wall and main switch immediately, and keep away. You should book a power issue inspection.';
       speak(reply, isHindi ? 'hi-IN' : 'en-IN', () => {
+        setInterfaceRevealed?.(true);
         setRecommendation(CATALOG.no_cooling);
       });
       return;

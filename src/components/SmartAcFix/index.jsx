@@ -36,6 +36,8 @@ function SmartAcCanvas({ onBack, embedded, voiceOnly, onSelectService, onSuggest
   const [interfaceRevealed, setInterfaceRevealed] = useState(false);
   const [sttText, setSttText] = useState('');
   const [ttsText, setTtsText] = useState('');
+  const spokenTurns = useRef([]);   // what the person said, one entry per turn (the live caption is cleared after each turn)
+  const liveCaption = useRef('');
   const roomRef = useRef(null);
   const browserSessionRef = useRef(null);
   const stateRef = useRef(state);
@@ -120,7 +122,11 @@ function SmartAcCanvas({ onBack, embedded, voiceOnly, onSelectService, onSuggest
           onStatus: (status) => {
             if (status === 'listening') setVoiceStatus('connected');
           },
-          onSttText: setSttText,
+          onSttText: (text) => {
+            if (text) liveCaption.current = text;
+            else if (liveCaption.current) { spokenTurns.current.push(liveCaption.current); liveCaption.current = ''; }
+            setSttText(text);
+          },
           onTtsText: setTtsText,
         });
         setVoiceStatus('connected');
@@ -228,7 +234,7 @@ function SmartAcCanvas({ onBack, embedded, voiceOnly, onSelectService, onSuggest
           <h2>Co-Pilot Diagnosing AC…</h2>
           <p>Analyzing symptoms with Urban Company rate card &amp; verifying scope.</p>
         </section>}
-        <RecommendationCard recommendation={voiceRecommendation} onSelect={(recommendation) => (onSuggest ? onSuggest({ source: 'voice', recommendation, state: stateRef.current, transcript: sttText }) : onSelectService?.(recommendation))} hideDetails={voiceOnly} />
+        <RecommendationCard recommendation={voiceRecommendation} onSelect={(recommendation) => (onSuggest ? onSuggest({ source: 'voice', recommendation, state: stateRef.current, transcript: [...spokenTurns.current, liveCaption.current || sttText].filter(Boolean).join('. ') }) : onSelectService?.(recommendation))} hideDetails={voiceOnly} />
         {voiceOnly && interfaceRevealed && <div className="coolcare-card coolcare-language-card coolcare-revealed">
           <div className="coolcare-segmented" role="tablist" aria-label="Vaayu language">
             {VOICE_LANGUAGES.map((item) => <span key={item.code} role="tab" aria-selected={activeLanguage === item.code} className={activeLanguage === item.code ? 'is-active' : ''} title={item.label}>{item.short}</span>)}
